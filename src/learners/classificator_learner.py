@@ -33,7 +33,7 @@ class ClassificatorLearner(LightningModule):
         train_metrics = self.train_metrics.compute()
         self.train_metrics.reset()
         for metric_name in train_metrics:
-            self.log(f'train/{metric_name}', train_metrics[metric_name], on_step=False, on_epoch=True)
+            self.log(f'train/{metric_name}', train_metrics[metric_name], on_step=False, on_epoch=True, prog_bar=True)
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
@@ -47,7 +47,7 @@ class ClassificatorLearner(LightningModule):
         val_metrics = self.val_metrics.compute()
         self.val_metrics.reset()
         for metric_name in val_metrics:
-            self.log(f'val/{metric_name}', val_metrics[metric_name], on_step=False, on_epoch=True)
+            self.log(f'val/{metric_name}', val_metrics[metric_name], on_step=False, on_epoch=True, prog_bar=True)
 
     def configure_optimizers(self):
         optimizer = create_optimizer(self.cfg.optimizer.name, self.model, self.cfg.optimizer.kwargs)
