@@ -1,7 +1,11 @@
-from torchmetrics.classification import Accuracy, Precision, Recall, AveragePrecision
+from torchmetrics.classification import *
 from torchmetrics import Metric
 from torch.nn import ModuleDict
 import torch
+
+available_names = [
+    'Accuracy', 'Precision', 'Recall', 'AveragePrecision'
+]
 
 
 def create_metrics(metrics_infos: dict) -> Metric:
@@ -10,18 +14,12 @@ def create_metrics(metrics_infos: dict) -> Metric:
     :param metrics_infos: dict as like {metrics_name: metric_kwargs}
     :return: Metric
     '''
-    return MetricDict(list(metrics_infos.keys()), list(metrics_infos.values()))
+    return MetricDict(list(metrics_infos.keys()), metrics_infos)
 
 
 def create_metric__(metric_name, kwargs):
-    if metric_name == 'Accuracy':
-        return Accuracy(**kwargs)
-    elif metric_name == 'Precision':
-        return Precision(**kwargs)
-    elif metric_name == 'Recall':
-        return Recall(**kwargs)
-    elif metric_name == 'AveragePrecision':
-        return AveragePrecision(**kwargs)
+    if metric_name in available_names:
+        return eval(metric_name)(**kwargs)
     else:
         raise NotImplementedError('{} not implemented'.format(metric_name))
 

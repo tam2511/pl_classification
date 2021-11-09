@@ -8,6 +8,7 @@ from torchvision.models.googlenet import *
 from torchvision.models.inception import *
 from torchvision.models.resnet import *
 from torchvision.models.vgg import *
+from torch.nn import Linear
 
 available_names = [
     'mobilenet_v2', 'mobilenet_v3_small', 'mobilenet_v3_large', 'shufflenet_v2_x1_0', 'squeezenet1_0',
@@ -20,6 +21,13 @@ available_names = [
 
 def create_model(model_name, kwargs):
     if model_name in available_names:
-        return eval(model_name)(**kwargs)
+        num_classes = 0
+        if 'num_classes' in kwargs:
+            num_classes = kwargs['num_classes']
+            del kwargs['num_classes']
+        model = eval(model_name)(**kwargs)
+        if num_classes > 0:
+            model.fc = Linear(model.fc.in_features, num_classes, bias=True)
+        return model
     else:
         raise NotImplementedError('{} not implemented'.format(model_name))
