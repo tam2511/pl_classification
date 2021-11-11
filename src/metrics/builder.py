@@ -46,3 +46,6 @@ class MetricDict(Metric):
     def reset(self):
         for metric_name in self.metrics.keys():
             self.metrics[metric_name].reset()
+
+    def add(self, metric: Metric, name: str):
+        self.metrics.add_module(name=name, module=metric)
