@@ -18,7 +18,7 @@ class BestThresholdStats(Metric):
     def compute(self) -> dict:
         best_thresholds, best_decision_metric_values, precision, recall, accuracy = self.metric.compute()
         result = {}
-        if precision.size(0) == len(self.class_names):
+        if precision.size() == torch.Size([len(self.class_names)]):
             for idx in range(len(self.class_names)):
                 result['{}_precision_{}'.format(self.metric_info['name'], self.class_names[idx])] = precision[idx]
                 result['{}_recall_{}'.format(self.metric_info['name'], self.class_names[idx])] = recall[idx]
