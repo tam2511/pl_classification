@@ -15,20 +15,21 @@ class ClassificatorLearner(LightningModule):
             model: torch.nn.Module = None,
             loss: torch.nn.Module = None,
             train_metrics: list = None,
-            val_metrics: list = None
+            val_metrics: list = None,
+            class_names: list = None
     ):
         super().__init__()
         self.cfg = cfg
         self.model = create_model(cfg.model.name, cfg.model.domen, cfg.model.kwargs) if model is None else model
         self.loss_f = create_loss(cfg.loss.name, cfg.loss.multilabel, cfg.loss.kwargs) if loss is None else loss
-        self.train_metrics = create_metrics(cfg.train.metrics)
+        self.train_metrics = create_metrics(cfg.train.metrics, class_names)
         if not train_metrics is None:
             for train_metric in train_metrics:
-                self.train_metrics.add(name=train_metric['name'], metric=train_metric['metric'])
+                self.train_metrics.add(metric=train_metric['metric'])
         self.val_metrics = create_metrics(cfg.val.metrics)
         if not val_metrics is None:
             for val_metric in val_metrics:
-                self.val_metrics.add(name=val_metric['name'], metric=val_metric['metric'])
+                self.val_metrics.add(metric=val_metric['metric'])
 
     def forward(self, x):
         return self.model(x)
