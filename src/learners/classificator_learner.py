@@ -25,11 +25,11 @@ class ClassificatorLearner(LightningModule):
         self.train_metrics = create_metrics(cfg.train.metrics, class_names)
         if not train_metrics is None:
             for train_metric in train_metrics:
-                self.train_metrics.add(metric=train_metric['metric'])
+                self.train_metrics.add(metric=train_metric)
         self.val_metrics = create_metrics(cfg.val.metrics)
         if not val_metrics is None:
             for val_metric in val_metrics:
-                self.val_metrics.add(metric=val_metric['metric'])
+                self.val_metrics.add(metric=val_metric)
 
     def forward(self, x):
         return self.model(x)
