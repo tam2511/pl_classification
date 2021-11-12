@@ -38,7 +38,7 @@ class MetricsList(Metric):
             self.metrics[metric_idx].update(preds, target)
 
     def compute(self):
-        result = []
+        result = {}
         for metric_idx in range(len(self.metrics)):
             result_ = self.metrics[metric_idx].compute()
             for name in result_:
