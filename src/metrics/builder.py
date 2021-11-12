@@ -50,4 +50,4 @@ class MetricsList(Metric):
             self.metrics[f'{metric_idx}'].reset()
 
     def add(self, metric: Metric):
-        self.metrics.append(name=f'{len(self.metrics)}', module=metric)
+        self.metrics.add_module(name=f'{len(self.metrics)}', module=metric)
