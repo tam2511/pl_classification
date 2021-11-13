@@ -46,9 +46,7 @@ class ClassificatorLearner(LightningModule):
         train_metrics = self.train_metrics.compute()
         self.train_metrics.reset()
         for metric_name in train_metrics:
-            in_progress_bar = metric_name in self.cfg.train.progress_bar
-            self.log(f'train/{metric_name}', train_metrics[metric_name], on_step=False, on_epoch=True,
-                     prog_bar=in_progress_bar)
+            self.log(f'train/{metric_name}', train_metrics[metric_name], on_step=False, on_epoch=True, prog_bar=True)
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
@@ -62,10 +60,7 @@ class ClassificatorLearner(LightningModule):
         val_metrics = self.val_metrics.compute()
         self.val_metrics.reset()
         for metric_name in val_metrics:
-            metric_name_ = metric_name.split('_')[0]
-            in_progress_bar = metric_name_ in self.cfg.val.progress_bar
-            self.log(f'val/{metric_name}', val_metrics[metric_name], on_step=False, on_epoch=True,
-                     prog_bar=in_progress_bar)
+            self.log(f'val/{metric_name}', val_metrics[metric_name], on_step=False, on_epoch=True, prog_bar=True)
 
     def configure_optimizers(self):
         '''TODO: user's optimizer and lr_scheduler'''
