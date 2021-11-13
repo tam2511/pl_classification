@@ -21,6 +21,7 @@ cfg.loss = {
 
     },
     'multilabel': False
+
 }
 
 cfg.optimizer = {

@@ -1,30 +1,29 @@
-from torchmetrics import *
+from torchmetrics import Metric
+from torch.nn import ModuleList
 import torch
 
-available_names = [
-    'Accuracy', 'Precision', 'Recall', 'AveragePrecision'
-]
 
-
-class TorchMetric(Metric):
-    def __init__(self, metric_info, class_names=None):
-        super().__init__()
-        if metric_info['name'] in available_names:
-            self.metric = eval(metric_info['name'])(**{_: metric_info[_] for _ in metric_info if _ != 'name'})
-        else:
-            raise NotImplementedError('{} not implemented'.format(metric_info['name']))
-        self.class_names = class_names
-        self.metric_info = metric_info
+class MetricsList(Metric):
+    def __init__(self, dist_sync_on_step=False, compute_on_step=True):
+        super().__init__(dist_sync_on_step=dist_sync_on_step, compute_on_step=compute_on_step)
+        self.metrics = ModuleList()
 
     def update(self, preds: torch.Tensor, target: torch.Tensor):
-        self.metric.update(preds, target)
+        for metric_idx in range(len(self.metrics)):
+            # TODO: optimize metrics device passing
+            self.metrics[metric_idx].to(preds.device)
+            self.metrics[metric_idx].update(preds, target)
 
-    def compute(self) -> dict:
-        result = self.metric.compute()
-        if result.size(0) == len(self.class_names):
-            return {'{}_{}'.format(self.metric_info['name'], self.class_names[idx]): result[idx] for idx in
-                    range(len(self.class_names))}
-        return {'{}_{}'.format(self.metric_info['name'], self.metric.average): result}
+    def compute(self):
+        result = {}
+        for metric_idx in range(len(self.metrics)):
+            result_ = self.metrics[metric_idx].compute()
+            result.update(result_)
+        return result
 
     def reset(self):
-        self.metric.reset()
+        for metric_idx in range(len(self.metrics)):
+            self.metrics[metric_idx].reset()
+
+    def add(self, metric: Metric):
+        self.metrics.append(module=metric)
