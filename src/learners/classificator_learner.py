@@ -37,7 +37,7 @@ class ClassificatorLearner(LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch
         y_ = self.forward(x)
-        loss = self.loss_f(y_, y.float() if self.cfg.loss.multilabel else y.argmax(dim=1))
+        loss = self.loss_f(y_, y.float() if self.cfg.multilabel else y.argmax(dim=1))
         self.log('train/loss', loss, on_step=True, on_epoch=False)
         self.train_metrics.update(y_, y)
         return loss
@@ -53,7 +53,7 @@ class ClassificatorLearner(LightningModule):
     def validation_step(self, batch, batch_idx):
         x, y = batch
         y_ = self.forward(x)
-        loss = self.loss_f(y_, y.float() if self.cfg.loss.multilabel else y.argmax(dim=1))
+        loss = self.loss_f(y_, y.float() if self.cfg.multilabel else y.argmax(dim=1))
         self.val_metrics.update(y_, y)
         self.log(f'val/loss', loss, on_step=False, on_epoch=True)
         return loss
