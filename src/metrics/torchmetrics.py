@@ -21,7 +21,7 @@ class TorchMetric(Metric):
 
     def compute(self) -> dict:
         result = self.metric.compute()
-        if result.size(0) == len(self.class_names):
+        if result.size() == torch.Size([len(self.class_names)]):
             return {'{}_{}'.format(self.metric_info['name'], self.class_names[idx]): result[idx] for idx in
                     range(len(self.class_names))}
         return {'{}_{}'.format(self.metric_info['name'], self.metric.average): result}
