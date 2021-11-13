@@ -2,6 +2,8 @@ from easydict import EasyDict
 
 cfg = EasyDict()
 
+cfg.multilabel = False
+
 cfg.trainer_kwargs = {
     'gpus': 1
 }
@@ -19,9 +21,7 @@ cfg.loss = {
     'name': 'CrossEntropyLoss',
     'kwargs': {
 
-    },
-    'multilabel': False
-
+    }
 }
 
 cfg.optimizer = {

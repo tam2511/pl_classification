@@ -20,7 +20,7 @@ if __name__ == '__main__':
 
     model = create_model(cfg.model.name, cfg.model.domen, cfg.model.kwargs)
 
-    loss = create_loss(cfg.loss.name, cfg.loss.multilabel, cfg.loss.kwargs)
+    loss = create_loss(cfg.loss.name, cfg.multilabel, cfg.loss.kwargs)
 
     learner = ClassificatorLearner(cfg=cfg, model=model, loss=loss)
     trainer = Trainer(**cfg.trainer_kwargs)
