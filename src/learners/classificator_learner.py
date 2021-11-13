@@ -3,7 +3,7 @@ import torch
 
 from losses.builder import create_loss
 from lr_schedulers.builder import create_lr_scheduler
-from metrics import MetricsList
+from metrics.metric import MetricsList
 from models.builder import create_model
 from optimizers.builder import create_optimizer
 
@@ -12,16 +12,17 @@ class ClassificatorLearner(LightningModule):
     def __init__(
             self,
             cfg,
-            model: torch.nn.Module = None,
-            loss: torch.nn.Module = None,
+            model: torch.nn.Module,
+            loss: torch.nn.Module,
             train_metrics: list = None,
             val_metrics: list = None
     ):
+        # TODO: add metrics options
         super().__init__()
         self.cfg = cfg
-        self.model = create_model(cfg.model.name, cfg.model.domen, cfg.model.kwargs) if model is None else model
-        self.loss_f = create_loss(cfg.loss.name, cfg.loss.multilabel, cfg.loss.kwargs) if loss is None else loss
-        self.train_metrics = MetricsList([])
+        self.model = model
+        self.loss_f = loss
+        self.train_metrics = MetricsList()
         if not train_metrics is None:
             for train_metric in train_metrics:
                 self.train_metrics.add(metric=train_metric)
