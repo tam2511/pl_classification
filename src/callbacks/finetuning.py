@@ -7,7 +7,7 @@ class SequentialFinetune(BaseFinetuning):
         self.sequence = sequence
 
     def freeze_before_training(self, pl_module):
-        self.freeze(pl_module.model)
+        self.freeze(pl_module.model, train_bn=False)
         if '0' not in self.sequence:
             raise ValueError('SequentialFinetune can work only with sequence which containing \'0\'')
         self.make_trainable([pl_module.model.get_submodule(layer_name) for layer_name in self.sequence['0']['layers']])
