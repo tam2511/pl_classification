@@ -13,7 +13,7 @@ class SequentialFinetune(BaseFinetuning):
         self.make_trainable([pl_module.model.get_submodule(layer_name) for layer_name in self.sequence['0']['layers']])
 
     def finetune_function(self, pl_module, current_epoch, optimizer, optimizer_idx):
-        if str(current_epoch) not in self.sequence and current_epoch == 0:
+        if str(current_epoch) not in self.sequence or current_epoch == 0:
             return
         subseq = self.sequence[str(current_epoch)]['layers']
         modules = [pl_module.model.get_submodule(layer_name) for layer_name in subseq]
