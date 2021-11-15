@@ -4,10 +4,6 @@ cfg = EasyDict()
 
 cfg.multilabel = False
 
-cfg.trainer_kwargs = {
-    'gpus': 1
-}
-
 cfg.model = {
     'domen': 'torchvision',
     'name': 'resnet18',
@@ -29,6 +25,11 @@ cfg.optimizer = {
     'kwargs': {
         'lr': 3e-4
     }
+}
+
+cfg.finetuning = {
+    '0': {'layers': ['fc']},
+    '2': {'layers': ['avgpool', 'layer4']}
 }
 
 cfg.lr_scheduler = {

@@ -15,6 +15,6 @@ def create_optimizer(optimizer_name: str, model: nn.Module, kwargs: dict) -> Opt
     :return: Optimizer object
     '''
     if optimizer_name in available_names:
-        return eval(optimizer_name)(params=model.parameters(), **kwargs)
+        return eval(optimizer_name)(params=filter(lambda p: p.requires_grad, model.parameters()), **kwargs)
     else:
         raise NotImplementedError('{} not implemented'.format(optimizer_name))
