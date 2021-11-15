@@ -1,5 +1,5 @@
 from pytorch_lightning import Trainer
-from callbacks import SequentialFinetune
+from callbacks import SequentialFinetune, ImageLogger
 from torch.utils.data import DataLoader
 
 from datasets.builder import create_dataset
@@ -13,6 +13,7 @@ train_transform = create_transform(cfg.train.transforms)
 val_transforms = create_transform(cfg.val.transforms)
 
 finetuner = SequentialFinetune(cfg.finetuning)
+image_logger = ImageLogger()
 
 if __name__ == '__main__':
     train_dataset = create_dataset(cfg.train.dataset.type, train_transform, cfg.train.dataset.kwargs)
@@ -26,5 +27,5 @@ if __name__ == '__main__':
     loss = create_loss(cfg.loss.name, cfg.multilabel, cfg.loss.kwargs)
 
     learner = ClassificatorLearner(cfg=cfg, model=model, loss=loss)
-    trainer = Trainer(gpus=0, callbacks=[finetuner])
+    trainer = Trainer(gpus=0, callbacks=[finetuner, image_logger])
     trainer.fit(learner, train_dataloader=train_dataloader, val_dataloaders=[val_dataloader])
