@@ -43,6 +43,7 @@ class ClassificatorLearner(LightningModule):
         y_ = self.forward(x)
         loss = self.loss_f(y_, y.float() if self.cfg.multilabel else y.argmax(dim=1))
         self.log('train/loss', loss, on_step=True, on_epoch=False)
+        y_ = torch.sigmoid(y_) if self.cfg.multilabel else torch.argmax(y_, dim=1)
         self.train_metrics.update(y_, y)
         ret = {'loss': loss}
         if self.return_train_ouput:
@@ -59,6 +60,7 @@ class ClassificatorLearner(LightningModule):
         x, y = batch
         y_ = self.forward(x)
         loss = self.loss_f(y_, y.float() if self.cfg.multilabel else y.argmax(dim=1))
+        y_ = torch.sigmoid(y_) if self.cfg.multilabel else torch.argmax(y_, dim=1)
         self.val_metrics.update(y_, y)
         self.log(f'val/loss', loss, on_step=False, on_epoch=True)
         ret = {'loss': loss}

@@ -174,12 +174,10 @@ class ImageLogger(Callback):
         transform = self.inv_transform if self.mode == 'train' else self.inv_transform[dataloader_idx]
         x = [np.rint(transform(image=_)['image']).astype('uint8') for _ in x]
         if self.multilabel:
-            output = torch.sigmoid(output)
             values, indexes = torch.topk(output, dim=1, k=min(self.n_top_classes, output.size(1)))
             result = [{self.class_names[indexes[obj_idx][i]]: values[obj_idx][i] for i in range(len(indexes[obj_idx]))}
                       for obj_idx in range(len(indexes))]
         else:
-            output = torch.softmax(output, dim=1)
             value, index = torch.max(output, dim=1)
             result = [{self.class_names[index[obj_idx]]: value[obj_idx]} for obj_idx in range(len(index))]
         for i in range(len(x)):
