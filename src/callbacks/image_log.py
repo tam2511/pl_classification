@@ -113,11 +113,11 @@ class ImageLogger(Callback):
 
     def __draw_predictions(self, image, predictions, targets):
         text_w, text_h = self.__text_area_size(predictions, targets)
+        # TODO: filtering bad images in image_logger drawing
         try:
             new_image = np.zeros((image.shape[0] + text_h, max(image.shape[1], text_w), image.shape[2]), dtype='uint8')
         except Exception:
-            print(image.shape, text_h, text_w)
-            raise ValueError
+            return image
         new_image[:image.shape[0], :image.shape[1], :image.shape[2]] = image
         bias = 0
         for class_name in predictions:
