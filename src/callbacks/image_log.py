@@ -171,7 +171,7 @@ class ImageLogger(Callback):
         return x, y, output
 
     def __common_part2(self, x, y, output, epoch, dataloader_idx):
-        transform = self.inv_transform if self.mode == 'train' else self.idxs[dataloader_idx]
+        transform = self.inv_transform if self.mode == 'train' else self.inv_transform[dataloader_idx]
         x = [np.rint(transform(image=_)['image']).astype('uint8') for _ in x]
         if self.multilabel:
             output = torch.sigmoid(output)
