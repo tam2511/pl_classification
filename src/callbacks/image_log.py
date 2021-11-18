@@ -150,6 +150,7 @@ class ImageLogger(Callback):
         output = outputs['output']
         idxs = self.idxs if self.mode == 'train' else self.idxs[dataloader_idx]
         x, y = batch
+        x, y, output = x.cpu(), y.cpu(), output.cpu()
         x = torch.permute(x, (0, 2, 3, 1))
         x = x.numpy()
         if idxs is None:
