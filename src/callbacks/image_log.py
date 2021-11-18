@@ -156,7 +156,6 @@ class ImageLogger(Callback):
         x, y = batch
         x, y, output = x.cpu(), y.cpu(), output.cpu()
         x = torch.permute(x, (0, 2, 3, 1))
-        x = x.numpy()
         print('before:', x.shape, y.shape, output.shape)
         if idxs is None:
             n_handled = self.n_handled if isinstance(self.n_handled, int) else self.n_handled[dataloader_idx]
@@ -176,7 +175,7 @@ class ImageLogger(Callback):
                 return
             x, y, output = x[filtered_idxs], y[filtered_idxs], output[filtered_idxs]
         print('after:', x.shape, y.shape, output.shape)
-
+        x = x.numpy()
         return x, y, output
 
     def __common_part2(self, x, y, output, epoch, dataloader_idx):
