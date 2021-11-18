@@ -113,7 +113,11 @@ class ImageLogger(Callback):
 
     def __draw_predictions(self, image, predictions, targets):
         text_w, text_h = self.__text_area_size(predictions, targets)
-        new_image = np.zeros((image.shape[0] + text_h, max(image.shape[1], text_w), image.shape[2]), dtype='uint8')
+        try:
+            new_image = np.zeros((image.shape[0] + text_h, max(image.shape[1], text_w), image.shape[2]), dtype='uint8')
+        except Exception:
+            print(image.shape, text_h, text_w)
+            raise ValueError
         new_image[:image.shape[0], :image.shape[1], :image.shape[2]] = image
         bias = 0
         for class_name in predictions:
@@ -225,8 +229,10 @@ class ImageLogger(Callback):
             return
         for dataloader_idx in self.n_handled:
             self.n_handled[dataloader_idx] = 0
+        self.__init_idxs(trainer)
 
     def on_train_epoch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", unused: Optional = None):
         if self.mode != 'train':
             return
         self.n_handled = 0
+        self.__init_idxs(trainer)
