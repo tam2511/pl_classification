@@ -206,7 +206,10 @@ class ImageLogger(Callback):
         if self.mode != 'val':
             return
         self.__check_part(trainer, outputs, dataloader_idx)
-        x, y, output = self.__common_part1(outputs, batch, batch_idx, dataloader_idx)
+        result_part1 = self.__common_part1(outputs, batch, batch_idx, dataloader_idx)
+        if result_part1 is None:
+            return
+        x, y, output = result_part1
         self.__common_part2(x, y, output, trainer.current_epoch, dataloader_idx)
 
     def on_train_batch_end(
@@ -221,7 +224,10 @@ class ImageLogger(Callback):
         if self.mode != 'train':
             return
         self.__check_part(trainer, outputs, dataloader_idx)
-        x, y, output = self.__common_part1(outputs, batch, batch_idx, dataloader_idx)
+        result_part1 = self.__common_part1(outputs, batch, batch_idx, dataloader_idx)
+        if result_part1 is None:
+            return
+        x, y, output = result_part1
         self.__common_part2(x, y, output, trainer.current_epoch, dataloader_idx)
 
     def on_validation_epoch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule"):
