@@ -113,11 +113,7 @@ class ImageLogger(Callback):
 
     def __draw_predictions(self, image, predictions, targets):
         text_w, text_h = self.__text_area_size(predictions, targets)
-        # TODO: filtering bad images in image_logger drawing
-        try:
-            new_image = np.zeros((image.shape[0] + text_h, max(image.shape[1], text_w), image.shape[2]), dtype='uint8')
-        except Exception:
-            return image
+        new_image = np.zeros((image.shape[0] + text_h, max(image.shape[1], text_w), image.shape[2]), dtype='uint8')
         new_image[:image.shape[0], :image.shape[1], :image.shape[2]] = image
         bias = 0
         for class_name in predictions:
@@ -156,7 +152,6 @@ class ImageLogger(Callback):
         x, y = batch
         x, y, output = x.cpu(), y.cpu(), output.cpu()
         x = torch.permute(x, (0, 2, 3, 1))
-        print('before:', x.shape, y.shape, output.shape)
         if idxs is None:
             n_handled = self.n_handled if isinstance(self.n_handled, int) else self.n_handled[dataloader_idx]
             if self.n_images <= self.n_handled:
@@ -168,13 +163,10 @@ class ImageLogger(Callback):
             else:
                 self.n_handled[dataloader_idx] += len(x)
         else:
-            print(idxs)
-            print(torch.where(idxs[0] == batch_idx)[0])
             filtered_idxs = idxs[1, torch.where(idxs[0] == batch_idx)[0]]
             if len(filtered_idxs) == 0:
                 return
             x, y, output = x[filtered_idxs], y[filtered_idxs], output[filtered_idxs]
-        print('after:', x.shape, y.shape, output.shape)
         x = x.numpy()
         return x, y, output
 
