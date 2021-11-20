@@ -1,6 +1,7 @@
 .idea
 src/configs/__pycache__
 src/datasets/__pycache__
+src/callbacks/__pycache__
 src/learners/__pycache__
 src/losses/__pycache__
 src/lr_schedulers/__pycache__

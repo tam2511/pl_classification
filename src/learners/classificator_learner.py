@@ -15,7 +15,9 @@ class ClassificatorLearner(LightningModule):
             model: torch.nn.Module,
             loss: torch.nn.Module,
             train_metrics: list = None,
-            val_metrics: list = None
+            val_metrics: list = None,
+            return_val_output=False,
+            return_train_output=False,
     ):
         # TODO: add metrics options
         super().__init__()
@@ -23,6 +25,8 @@ class ClassificatorLearner(LightningModule):
         self.model = model
         self.loss_f = loss
         self.train_metrics = MetricsList()
+        self.return_val_output = return_val_output
+        self.return_train_ouput = return_train_output
         if not train_metrics is None:
             for train_metric in train_metrics:
                 self.train_metrics.add(metric=train_metric)
@@ -39,8 +43,12 @@ class ClassificatorLearner(LightningModule):
         y_ = self.forward(x)
         loss = self.loss_f(y_, y.float() if self.cfg.multilabel else y.argmax(dim=1))
         self.log('train/loss', loss, on_step=True, on_epoch=False)
+        y_ = torch.sigmoid(y_) if self.cfg.multilabel else torch.argmax(y_, dim=1)
         self.train_metrics.update(y_, y)
-        return loss
+        ret = {'loss': loss}
+        if self.return_train_ouput:
+            ret['output'] = y_
+        return ret
 
     def training_epoch_end(self, train_step_outputs):
         train_metrics = self.train_metrics.compute()
@@ -52,9 +60,13 @@ class ClassificatorLearner(LightningModule):
         x, y = batch
         y_ = self.forward(x)
         loss = self.loss_f(y_, y.float() if self.cfg.multilabel else y.argmax(dim=1))
+        y_ = torch.sigmoid(y_) if self.cfg.multilabel else torch.argmax(y_, dim=1)
         self.val_metrics.update(y_, y)
         self.log(f'val/loss', loss, on_step=False, on_epoch=True)
-        return loss
+        ret = {'loss': loss}
+        if self.return_val_output:
+            ret['output'] = y_
+        return ret
 
     def validation_epoch_end(self, val_step_outputs):
         val_metrics = self.val_metrics.compute()
