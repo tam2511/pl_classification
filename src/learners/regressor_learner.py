@@ -6,7 +6,7 @@ from metrics.metric import MetricsList
 from optimizers.builder import create_optimizer
 
 
-class ClassificatorLearner(LightningModule):
+class RegressorLearner(LightningModule):
     def __init__(
             self,
             cfg,
@@ -17,7 +17,6 @@ class ClassificatorLearner(LightningModule):
             return_val_output=False,
             return_train_output=False,
     ):
-        # TODO: add metrics options
         super().__init__()
         self.cfg = cfg
         self.model = model
@@ -39,9 +38,8 @@ class ClassificatorLearner(LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch
         y_ = self.forward(x)
-        loss = self.loss_f(y_, y.float() if self.cfg.multilabel else y.argmax(dim=1))
+        loss = self.loss_f(y_, y.float())
         self.log('train/loss', loss, on_step=True, on_epoch=False)
-        y_ = torch.sigmoid(y_) if self.cfg.multilabel else torch.argmax(y_, dim=1)
         self.train_metrics.update(y_, y)
         ret = {'loss': loss}
         if self.return_train_ouput:
@@ -57,8 +55,7 @@ class ClassificatorLearner(LightningModule):
     def validation_step(self, batch, batch_idx):
         x, y = batch
         y_ = self.forward(x)
-        loss = self.loss_f(y_, y.float() if self.cfg.multilabel else y.argmax(dim=1))
-        y_ = torch.sigmoid(y_) if self.cfg.multilabel else torch.argmax(y_, dim=1)
+        loss = self.loss_f(y_, y.float())
         self.val_metrics.update(y_, y)
         self.log(f'val/loss', loss, on_step=False, on_epoch=True)
         ret = {'loss': loss}
@@ -73,7 +70,6 @@ class ClassificatorLearner(LightningModule):
             self.log(f'val/{metric_name}', val_metrics[metric_name], on_step=False, on_epoch=True, prog_bar=True)
 
     def configure_optimizers(self):
-        '''TODO: user's optimizer and lr_scheduler'''
         optimizer = create_optimizer(self.cfg.optimizer.name, self.model, self.cfg.optimizer.kwargs)
         lr_scheduler = create_lr_scheduler(self.cfg.lr_scheduler.name, optimizer, self.cfg.lr_scheduler.kwargs)
         lr_scheduler_options = self.cfg.lr_scheduler.options
