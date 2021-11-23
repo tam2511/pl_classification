@@ -1,5 +1,5 @@
 from pytorch_lightning import Trainer
-from callbacks import SequentialFinetune, ImageLogger
+from callbacks import SequentialFinetune, ImageLogger, Mixup
 from torch.utils.data import DataLoader
 from pytorch_lightning.loggers import TensorBoardLogger
 
@@ -15,6 +15,7 @@ val_transforms = create_transform(cfg.val.transforms)
 
 finetuner = SequentialFinetune(cfg.finetuning)
 image_logger = ImageLogger(mode='train', n_images=100, class_names=['cat', 'dog'], multilabel=True, n_top_classes=5)
+mixup = Mixup(alpha=0.4, mode='dataset')
 
 if __name__ == '__main__':
     train_dataset = create_dataset(cfg.train.dataset.type, train_transform, cfg.train.dataset.kwargs)
@@ -28,5 +29,5 @@ if __name__ == '__main__':
     loss = create_loss(cfg.loss.name, cfg.multilabel, cfg.loss.kwargs)
 
     learner = ClassificatorLearner(cfg=cfg, model=model, loss=loss, return_val_output=True, return_train_output=True)
-    trainer = Trainer(gpus=0, callbacks=[finetuner, image_logger])
+    trainer = Trainer(gpus=0, callbacks=[finetuner, image_logger, mixup])
     trainer.fit(learner, train_dataloader=train_dataloader, val_dataloaders=[val_dataloader])
