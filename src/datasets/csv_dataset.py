@@ -33,7 +33,7 @@ class CSVDataset(Dataset):
             image = self.transform(image=image)['image']
         if not self.return_label:
             return image
-        label = row[1:].astype('int32')
+        label = row[1:].astype('float32')
         return image, label
 
     def __getitem__(self, idx):

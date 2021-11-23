@@ -22,19 +22,26 @@ delimeter = '-'
 
 
 class ImageLogger(Callback):
+    ''' Callback for image and predictions logging '''
+
     def __init__(
             self,
-            mode='val',
-            n_images=1,
-            multilabel=False,
-            class_names=None,
-            n_top_classes=1,
-            output_dir=None
+            mode: str = 'val',
+            n_images: int = 1,
+            class_names: list = None,
+            n_top_classes: int = 1,
+            output_dir: str = None
     ):
+        '''
+        :param mode: 'train' or 'val'
+        :param n_images: number of log images per epoch
+        :param class_names: class names
+        :param n_top_classes: number of classes which will be drawing
+        :param output_dir: output dir for logging [default is lightning_logs]
+        '''
         super().__init__()
         self.mode = mode
         self.n_images = n_images
-        self.multilabel = multilabel
         self.class_names = class_names
         self.n_top_classes = n_top_classes
         self.output_dir = output_dir
@@ -111,26 +118,27 @@ class ImageLogger(Callback):
         text_h = sum(_[1] + extra_padding for _ in text_sizes) + padding + text_size[1]
         return text_w, text_h
 
-    def __draw_predictions(self, image, predictions, targets):
+    def __draw_predictions(self, image, bias, classes_info, color):
+        for class_name in classes_info:
+            row_str = '{}: {:.2f}'.format(class_name, classes_info[class_name].item())
+            text_size = self.__text_size(row_str)
+            bias = image.shape[1] + text_size[1] + 1 if bias == 0 else bias + text_size[1] + 1
+            image = cv2.putText(image, row_str, (1, bias), font, fontScale, color, thickness,
+                                cv2.LINE_AA)
+        return image, bias
+
+    def __draw_results(self, image, predictions, targets):
         text_w, text_h = self.__text_area_size(predictions, targets)
         new_image = np.zeros((image.shape[0] + text_h, max(image.shape[1], text_w), image.shape[2]), dtype='uint8')
         new_image[:image.shape[0], :image.shape[1], :image.shape[2]] = image
         bias = 0
-        for class_name in predictions:
-            row_str = '{}: {:.2f}'.format(class_name, predictions[class_name].item())
-            text_size = self.__text_size(row_str)
-            bias = image.shape[1] + text_size[1] + 1 if bias == 0 else bias + text_size[1] + 1
-            new_image = cv2.putText(new_image, row_str, (1, bias), font, fontScale, prediction_color, thickness,
-                                    cv2.LINE_AA)
+        new_image, bias = self.__draw_predictions(new_image, bias, predictions, prediction_color)
         text_size, _ = cv2.getTextSize(text=delimeter * image.shape[0], fontFace=cv2.FONT_HERSHEY_DUPLEX, fontScale=1,
                                        thickness=1)
         bias = bias + text_size[1] + 1
         new_image = cv2.putText(new_image, delimeter * image.shape[0], (0, bias), font, fontScale, delimiter_color,
                                 thickness, cv2.LINE_AA)
-        for target in targets:
-            text_size = self.__text_size(target)
-            bias = bias + text_size[1] + 1
-            new_image = cv2.putText(new_image, target, (1, bias), font, fontScale, target_color, thickness, cv2.LINE_AA)
+        new_image, bias = self.__draw_predictions(new_image, bias, targets, target_color)
         return new_image
 
     def __check_part(self, trainer, outputs, dataloader_idx):
@@ -173,16 +181,14 @@ class ImageLogger(Callback):
     def __common_part2(self, x, y, output, epoch, dataloader_idx):
         transform = self.inv_transform if self.mode == 'train' else self.inv_transform[dataloader_idx]
         x = [np.rint(transform(image=_)['image']).astype('uint8') for _ in x]
-        if self.multilabel:
-            values, indexes = torch.topk(output, dim=1, k=min(self.n_top_classes, output.size(1)))
-            result = [{self.class_names[indexes[obj_idx][i]]: values[obj_idx][i] for i in range(len(indexes[obj_idx]))}
-                      for obj_idx in range(len(indexes))]
-        else:
-            value, index = torch.max(output, dim=1)
-            result = [{self.class_names[index[obj_idx]]: value[obj_idx]} for obj_idx in range(len(index))]
+        values, indexes = torch.topk(output, dim=1, k=min(self.n_top_classes, output.size(1)))
+        results = [{self.class_names[indexes[obj_idx][i]]: values[obj_idx][i] for i in range(len(indexes[obj_idx]))}
+                   for obj_idx in range(len(indexes))]
+        values, indexes = torch.topk(y, dim=1, k=min(self.n_top_classes, output.size(1)))
+        targets = [{self.class_names[indexes[obj_idx][i]]: values[obj_idx][i] for i in range(len(indexes[obj_idx]))}
+                   for obj_idx in range(len(indexes))]
         for i in range(len(x)):
-            target = [self.class_names[k] for k in range(len(self.class_names)) if y[i][k]]
-            x[i] = self.__draw_predictions(x[i], result[i], target)
+            x[i] = self.__draw_results(x[i], results[i], targets[i])
             dest_dir = os.path.join(self.output_dir, f'epoch_{epoch}', self.mode)
             dest_dir = os.path.join(dest_dir, f'dataloader_{dataloader_idx}') if self.mode == 'val' else dest_dir
             os.makedirs(dest_dir, exist_ok=True)
