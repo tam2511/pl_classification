@@ -17,7 +17,6 @@ class ClassificatorLearner(LightningModule):
             return_val_output=False,
             return_train_output=False,
     ):
-        # TODO: add metrics options
         super().__init__()
         self.cfg = cfg
         self.model = model
