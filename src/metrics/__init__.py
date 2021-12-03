@@ -1,2 +1,3 @@
 from metrics.torchmetrics import TorchMetric
 from metrics.best_threshold_stats import BestThresholdStats
+from metrics.search_accuracy import SearchAccuracy
