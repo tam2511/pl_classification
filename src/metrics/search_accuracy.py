@@ -36,7 +36,7 @@ class SearchAccuracy(Metric):
 
     def __compute(self, embeddings: torch.Tensor, targets: torch.Tensor):
         k = [self.k] if isinstance(self.k, int) else list(self.k)
-        max_k = min(max(k), embeddings.size(0))
+        max_k = min(max(k) + 1, embeddings.size(0))
         result = [0.0] * len(k)
         if self.distance_name == 'Normalize cosine':
             embeddings = normalize(embeddings, dim=1)
@@ -47,8 +47,9 @@ class SearchAccuracy(Metric):
             true_targets = targets.narrow(0, idx, min(self.batch_size, embeddings.size(0) - idx))
             predicted_targets = targets[indicies]
             tp = true_targets.unsqueeze(-1).repeat(1, predicted_targets.size(1)) == predicted_targets
+            tp[:, 0] = False
             for k_idx in range(len(k)):
-                result[k_idx] += tp.narrow(1, 0, min(k[k_idx], tp.size(1))).any(dim=1).sum()
+                result[k_idx] += tp.narrow(1, 0, min(k[k_idx] + 1, tp.size(1))).any(dim=1).sum()
         result = torch.tensor(result) / embeddings.size(0)
         return {
             '{}_top{}'.format(self.name, k[k_idx]): result[[k_idx]] for k_idx in range(len(k))
