@@ -23,7 +23,7 @@ class RegressorLearner(LightningModule):
         self.loss_f = loss
         self.train_metrics = MetricsList()
         self.return_val_output = return_val_output
-        self.return_train_ouput = return_train_output
+        self.return_train_output = return_train_output
         if not train_metrics is None:
             for train_metric in train_metrics:
                 self.train_metrics.add(metric=train_metric)
@@ -42,7 +42,7 @@ class RegressorLearner(LightningModule):
         self.log('train/loss', loss, on_step=True, on_epoch=False)
         self.train_metrics.update(y_, y)
         ret = {'loss': loss}
-        if self.return_train_ouput:
+        if self.return_train_output:
             ret['output'] = y_
         return ret
 

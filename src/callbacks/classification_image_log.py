@@ -21,8 +21,8 @@ padding = 10
 delimeter = '-'
 
 
-class ImageLogger(Callback):
-    ''' Callback for image and predictions logging '''
+class ClassificationImageLogger(Callback):
+    """ Callback for image and predictions logging """
 
     def __init__(
             self,
@@ -32,13 +32,13 @@ class ImageLogger(Callback):
             n_top_classes: int = 1,
             output_dir: str = None
     ):
-        '''
+        """
         :param mode: 'train' or 'val'
         :param n_images: number of log images per epoch
         :param class_names: class names
         :param n_top_classes: number of classes which will be drawing
         :param output_dir: output dir for logging [default is lightning_logs]
-        '''
+        """
         super().__init__()
         self.mode = mode
         self.n_images = n_images

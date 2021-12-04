@@ -4,6 +4,8 @@ import torch
 
 
 class MixBaseCallback(Callback):
+    """Abstract callback for mix data operations"""
+
     def _generate_dataset_sample(self, batch_size, dataloader):
         dataset = dataloader.dataset.datasets
         sample = [dataset[i] for i in np.random.randint(0, len(dataset) - 1, batch_size)]

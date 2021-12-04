@@ -1,68 +1,56 @@
 import os
+from typing import Callable
 import numpy as np
-from torch.utils.data import Dataset
-from datasets.utils import check_image_load as check_image_load_f, read_image, get_label
+import dill
+
+from datasets.base_dataset import PathBaseDataset
 
 
-class DirDataset(Dataset):
+class DirDataset(PathBaseDataset):
     '''
-    Dataset implementation for images in directory on disk (stored images paths and labels in RAM).
-    Require root_path/label_name/.../image_path structure.
+    Dataset implementation for images in directory on disk (stored images paths in RAM).
+    Require root_path/.../image_path structure.
     '''
 
-    def __init__(self, root_path: str, transform=None, return_label=True, check_image_load=False):
+    def __init__(
+            self,
+            root_path: str,
+            label_parser: Callable,
+            transform=None,
+            return_label: bool = True
+    ):
         '''
         :param root_path: path of directory with images
-        :param transform: as like albumentations transform class or None
-        :param return_label: if True dataset will return labels
-        :param check_image_load: if True in __init__ will check is image correct
+        :param transform: albumentations transform or None
+        :param return_label: if True return (image, label), else return only image
+        :param label_parser: function for parsing label from relative path
         '''
-        self.root_path = root_path
-        self.transform = transform
+        super().__init__(image_prefix=root_path, transform=transform)
         self.return_label = return_label
-        self.check_image_load = check_image_load
-        self.image_paths = []
-        self.label_names = []
-        self.labels = []
-        self.load__()
+        self.label_parser = label_parser
 
-    def load__(self):
-        self.label_names = np.array([os.path.basename(os.path.join(self.root_path, dir_name)) for dir_name in
-                                     os.listdir(self.root_path) if
-                                     os.path.isdir(os.path.join(self.root_path, dir_name))])
-        for root, _, files in os.walk(self.root_path):
+        self.image_paths = []
+        self.labels = []
+        self.__load(root_path)
+
+    def __get_label(self, path):
+        if self.label_parser is not None:
+            return dill.loads(self.label_parser)(path)
+
+    def __load(self, root_path):
+        for root, _, files in os.walk(root_path):
             for file_name in files:
-                file_name = os.path.join(root, file_name)
-                if self.check_image_load and not check_image_load_f(file_name):
-                    continue
                 self.image_paths.append(file_name)
-                if not self.return_label:
-                    continue
-                label_name = get_label(os.path.relpath(file_name, self.root_path))
-                self.labels.append(self.label_names == label_name)
-        if self.return_label:
-            self.labels = np.stack(self.labels)
+                if self.return_label:
+                    self.labels.append(self.__get_label(file_name))
 
     def __len__(self):
         return len(self.image_paths)
 
-    def read_image__(self, idx, debug=False):
+    def __getitem__(self, idx):
         image_path = self.image_paths[idx]
-        image = read_image(image_path)
-        if self.transform and not debug:
-            image = self.transform(image=image)['image']
+        image = self._read_image(image_path)
         if not self.return_label:
             return image
         label = self.labels[idx]
         return image, label
-
-    def __getitem__(self, idx):
-        return self.read_image__(idx)
-
-    def debug(self, idx):
-        '''
-        Get image (and label) without transform
-        :param idx: int
-        :return: image (or image, label)
-        '''
-        return self.read_image__(idx, debug=True)

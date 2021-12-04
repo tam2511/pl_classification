@@ -1,48 +1,42 @@
+from typing import Callable
+
 import pandas as pd
-import os
-from torch.utils.data import Dataset
 
-from datasets.utils import read_image
+from datasets.base_dataset import PathBaseDataset
 
 
-class CSVDataset(Dataset):
+class CSVDataset(PathBaseDataset):
     '''
-    Csv dataset representation (csv will be in RAM)
+    Csv dataset representation
     '''
 
-    def __init__(self, csv_path: str, image_prefix='', transform=None, return_label=True):
+    def __init__(
+            self,
+            csv_path: str,
+            image_prefix: str = '',
+            path_transform: Callable = None,
+            transform=None,
+            return_label: bool = True
+    ):
         '''
-        :param csv_path: path to csv file with paths of images ang labels in one hot encoding
+        :param csv_path: path to csv file with paths of images (one column)
         :param image_prefix: path prefix which will be added to paths of images in csv file
-        :param transform: as like albumentations transform class or None
-        :param return_label: if True dataset will return labels
+        :param path_transform: None or function for transform of path. Will be os.path.join(image_prefix,
+         path_transform(image_path))
+        :param transform: albumentations transform class or None
+        :param return_label: if True return (image, label), else return only image
         '''
-        self.image_prefix = image_prefix
-        self.transform = transform
+        super().__init__(image_prefix=image_prefix, path_transform=path_transform, transform=transform)
         self.return_label = return_label
         self.dt = pd.read_csv(csv_path)
 
     def __len__(self):
         return len(self.dt)
 
-    def read_image__(self, idx, debug=False):
+    def __getitem__(self, idx):
         row = self.dt.iloc[idx].values
-        image_path = row[0] if self.image_prefix == '' else os.path.join(self.image_prefix, row[0])
-        image = read_image(image_path)
-        if self.transform and not debug:
-            image = self.transform(image=image)['image']
+        image = self._read_image(row[0])
         if not self.return_label:
             return image
-        label = row[1:].astype('float32')
+        label = row[1:].astype('int64')
         return image, label
-
-    def __getitem__(self, idx):
-        return self.read_image__(idx)
-
-    def debug(self, idx):
-        '''
-        Get image (and label) without transform
-        :param idx: int
-        :return: image (or image, label)
-        '''
-        return self.read_image__(idx, debug=True)

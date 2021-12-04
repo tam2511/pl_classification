@@ -2,7 +2,13 @@ from pytorch_lightning.callbacks import BaseFinetuning
 
 
 class SequentialFinetune(BaseFinetuning):
+    """Callback for sequence unfreezing model"""
+
     def __init__(self, sequence: dict):
+        """
+        :param sequence: dict of dicts. example: {0: {'layers': ['block1.layer_name1', ...]}, ...,
+         12: {'layers: ['block12.layer_name13', ...]}, 14: {'layers: ['block14.layer_name3', ...], 'lr_gamma': 0.1}}
+        """
         super().__init__()
         self.sequence = sequence
 
