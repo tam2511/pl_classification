@@ -3,55 +3,23 @@ from torchmetrics.functional import stat_scores
 import torch
 
 
-class BestThresholdStats(Metric):
-    '''Wrapper for BestThresholdStats_'''
-
-    def __init__(self, metric_info, class_names):
-        super().__init__()
-        self.metric = BestThresholdStats_(**{_: metric_info[_] for _ in metric_info if _ != 'name'})
-        self.class_names = class_names
-        self.metric_info = metric_info
-
-    def update(self, preds: torch.Tensor, target: torch.Tensor):
-        self.metric.update(preds, target)
-
-    def compute(self) -> dict:
-        best_thresholds, best_decision_metric_values, precision, recall, accuracy = self.metric.compute()
-        result = {}
-        if precision.size() == torch.Size([len(self.class_names)]):
-            for idx in range(len(self.class_names)):
-                result['{}_precision_{}'.format(self.metric_info['name'], self.class_names[idx])] = precision[idx]
-                result['{}_recall_{}'.format(self.metric_info['name'], self.class_names[idx])] = recall[idx]
-                result['{}_accuracy_{}'.format(self.metric_info['name'], self.class_names[idx])] = accuracy[idx]
-        else:
-            result['{}_precision_{}'.format(self.metric_info['name'], self.metric.average)] = precision
-            result['{}_recall_{}'.format(self.metric_info['name'], self.metric.average)] = recall
-            result['{}_accuracy_{}'.format(self.metric_info['name'], self.metric.average)] = accuracy
-        for idx in range(len(self.class_names)):
-            result['{}_f({:.2f})_{}'.format(self.metric_info['name'], self.metric.decisive_alpha,
-                                            self.class_names[idx])] = best_decision_metric_values[idx]
-            result['{}_threshold_{}'.format(self.metric_info['name'], self.class_names[idx])] = best_thresholds[idx]
-        return result
-
-    def reset(self):
-        self.metric.reset()
-
-
 class BestThresholdStats_(Metric):
     '''
-    Metric with evaluating best threshold and compute precision, recall, accuracy, fbeta
+    Metric looks for the best threshold for the metric fbeta and calculates the precision, recall, accuracy and fbeta
     '''
 
     def __init__(
             self,
-            num_classes,
-            average='micro',
-            threshold_bins=0.01,
-            min_threshold=0.0,
-            max_threshold=1.0,
-            decisive_beta=1.0,
-            epsilon=1e-8,
-            dist_sync_on_step=False,
+            num_classes: int,
+            average: str = 'micro',
+            threshold_bins: float = 0.01,
+            min_threshold: float = 0.0,
+            max_threshold: float = 1.0,
+            decisive_beta: float = 1.0,
+            epsilon: float = 1e-8,
+            class_names: list = None,
+            dist_sync_on_step: bool = False,
+            compute_on_step: bool = True
     ):
         '''
         :param num_classes: number of classes
@@ -61,14 +29,17 @@ class BestThresholdStats_(Metric):
         :param max_threshold: max threshold, which eval
         :param decisive_beta: beta for fbeta metric
         :param epsilon: epsilon for zero decision
-        :param dist_sync_on_step: if true will be eval in step
+        :param class_names: list of string names of classes
         '''
-        super().__init__(dist_sync_on_step=dist_sync_on_step)
+        super().__init__(dist_sync_on_step=dist_sync_on_step, compute_on_step=compute_on_step)
         self.thresholds = torch.arange(min_threshold, max_threshold, threshold_bins)
         self.decisive_alpha = decisive_beta
         self.num_classes = num_classes
+        self.class_names = class_names
+        self.name = self.__class__.__name__
+        if average not in ['micro', 'macro', 'none']:
+            raise ValueError('available only micro, macro or none')
         self.average = average
-        assert average in ['micro', 'macro', 'none']
         self.epsilon = epsilon
         self.add_state("tp", default=torch.zeros(num_classes, self.thresholds.size(0)), dist_reduce_fx="sum")
         self.add_state("tn", default=torch.zeros(num_classes, self.thresholds.size(0)), dist_reduce_fx="sum")
@@ -83,7 +54,7 @@ class BestThresholdStats_(Metric):
             self.tn[:, threshold_idx] += stat_scores_[:, 2]
             self.fn[:, threshold_idx] += stat_scores_[:, 3]
 
-    def compute(self):
+    def __compute(self):
         precision = self.tp / (self.tp + self.fp + self.epsilon)
         recall = self.tp / (self.tp + self.fn + self.epsilon)
         decision_metric_values = (1 + self.decisive_alpha ** 2) * (precision * recall) / (
@@ -100,6 +71,24 @@ class BestThresholdStats_(Metric):
         if self.average == 'macro':
             precision, recall, accuracy = precision.mean(), recall.mean(), accuracy.mean()
         return best_thresholds, best_decision_metric_values, precision, recall, accuracy
+
+    def compute(self) -> dict:
+        best_thresholds, best_decision_metric_values, precision, recall, accuracy = self.__compute()
+        result = {}
+        if precision.size() == torch.Size([len(self.class_names)]):
+            for idx in range(len(self.class_names)):
+                result['{}_precision_{}'.format(self.name, self.class_names[idx])] = precision[idx]
+                result['{}_recall_{}'.format(self.name, self.class_names[idx])] = recall[idx]
+                result['{}_accuracy_{}'.format(self.name, self.class_names[idx])] = accuracy[idx]
+        else:
+            result['{}_precision_{}'.format(self.name, self.metric.average)] = precision
+            result['{}_recall_{}'.format(self.name, self.metric.average)] = recall
+            result['{}_accuracy_{}'.format(self.name, self.metric.average)] = accuracy
+        for idx in range(len(self.class_names)):
+            result['{}_f({:.2f})_{}'.format(self.name, self.metric.decisive_alpha,
+                                            self.class_names[idx])] = best_decision_metric_values[idx]
+            result['{}_threshold_{}'.format(self.name, self.class_names[idx])] = best_thresholds[idx]
+        return result
 
     def reset(self):
         self.tp *= 0

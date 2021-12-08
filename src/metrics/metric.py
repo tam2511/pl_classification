@@ -4,13 +4,27 @@ import torch
 
 
 class MetricsList(Metric):
-    def __init__(self, dist_sync_on_step=False, compute_on_step=True):
+    """
+    List of metrics
+    """
+
+    def __init__(
+            self,
+            dist_sync_on_step: bool = False,
+            compute_on_step: bool = True
+    ):
         super().__init__(dist_sync_on_step=dist_sync_on_step, compute_on_step=compute_on_step)
         self.metrics = ModuleList()
 
+    def __to(self, device: torch.device):
+        for metric_idx in range(len(self.metrics)):
+            self.metrics[metric_idx].to(device=device)
+        self.to(device)
+
     def update(self, preds: torch.Tensor, target: torch.Tensor):
         for metric_idx in range(len(self.metrics)):
-            # TODO: optimize metrics device passing
+            if self._device != preds.device:
+                self.__to(preds.device)
             self.metrics[metric_idx].to(preds.device)
             self.metrics[metric_idx].update(preds, target)
 

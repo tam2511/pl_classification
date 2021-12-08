@@ -7,12 +7,26 @@ from metrics.utils.distances import build_distance, available_distances
 
 
 class SearchAccuracy(Metric):
-    def __init__(self,
-                 k: Union[int, list] = 1,
-                 batch_size: int = 512,
-                 distance: Union[str, Callable] = 'L2',
-                 largest: bool = True):
-        super().__init__()
+    """
+    Version of accuracy for search case
+    """
+
+    def __init__(
+            self,
+            k: Union[int, list] = 1,
+            batch_size: int = 512,
+            distance: Union[str, Callable] = 'L2',
+            largest: bool = True,
+            dist_sync_on_step: bool = False,
+            compute_on_step: bool = True
+    ):
+        """
+        :param k: SearchAccuracy return top k (top (k[0], k[1], ...) if k is list) accuracy rate
+        :param batch_size: batch size for evaluate distance operations
+        :param distance: name or function of distance
+        :param largest: if True metric evaluate top largest samples, else evaluate smallest samples
+        """
+        super().__init__(dist_sync_on_step=dist_sync_on_step, compute_on_step=compute_on_step)
         self.k = k
         self.batch_size = batch_size
         if isinstance(distance, str):
@@ -61,11 +75,7 @@ class SearchAccuracy(Metric):
 
     def compute(self):
         embeddings = torch.cat(self.embeddings, dim=0)
-        self.embeddings = []
+        self.embeddings.clear()
         targets = torch.cat(self.targets, dim=0)
-        self.targets = []
+        self.targets.clear()
         return self.__compute(embeddings, targets)
-
-    def reset(self):
-        self.embeddings = []
-        self.targets = []
