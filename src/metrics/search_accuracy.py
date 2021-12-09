@@ -74,8 +74,8 @@ class SearchAccuracy(Metric):
         self.targets.append(targets)
 
     def compute(self):
-        embeddings = torch.cat(self.embeddings, dim=0)
+        embeddings = torch.cat(self.embeddings, dim=0) if isinstance(self.embeddings, list) else self.embeddings
         self.embeddings.clear()
-        targets = torch.cat(self.targets, dim=0)
+        targets = torch.cat(self.targets, dim=0) if isinstance(self.targets, list) else self.targets
         self.targets.clear()
         return self.__compute(embeddings, targets)
