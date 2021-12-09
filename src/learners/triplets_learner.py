@@ -1,20 +1,25 @@
 import torch
 
 from learners.base_learner import BaseLearner
+from optimizers import Optimizer
+from lr_schedulers import Scheduler
 
 
 class TripletsLearner(BaseLearner):
     def __init__(
             self,
-            cfg,
             model: torch.nn.Module,
             loss: torch.nn.Module,
+            optimizer: Optimizer,
+            lr_scheduler: Scheduler = None,
             train_metrics: list = None,
             val_metrics: list = None,
             return_val_output=False,
             return_train_output=False,
     ):
-        super().__init__(cfg, model, loss, train_metrics, val_metrics, return_val_output, return_train_output)
+        super().__init__(model, loss, optimizer, lr_scheduler, train_metrics, val_metrics, return_val_output,
+                         return_train_output)
+
     __init__.__doc__ = BaseLearner.__init__.__doc__
 
     def common_step(self, batch, batch_idx):
