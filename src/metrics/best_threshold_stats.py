@@ -3,7 +3,7 @@ from torchmetrics.functional import stat_scores
 import torch
 
 
-class BestThresholdStats_(Metric):
+class BestThresholdStats(Metric):
     '''
     Metric looks for the best threshold for the metric fbeta and calculates the precision, recall, accuracy and fbeta
     '''
