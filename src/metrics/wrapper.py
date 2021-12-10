@@ -41,3 +41,9 @@ class TorchMetric(Metric):
             raise ValueError(
                 f'Length of result {self.name} {result.size(0)} not equal number of classes {len(classes)}')
         return {'{}_{}'.format(self.name, classes[idx]): result[idx] for idx in range(len(classes))}
+
+    def update(self, preds: torch.Tensor, targets: torch.Tensor):
+        self.metric.update(preds, targets)
+
+    def reset(self):
+        self.metric.reset()
