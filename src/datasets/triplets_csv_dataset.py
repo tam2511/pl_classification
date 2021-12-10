@@ -34,6 +34,7 @@ class TripletsCSVDataset(PathBaseDataset):
         self.dt = pd.read_csv(csv_path)
         self.return_triplets = return_triplets
         images_per_classes = self.dt.iloc[:, 1].apply(lambda x: len(x.split(' '))).values
+        self.dt = self.dt.values
         self.idxs = np.zeros((images_per_classes.sum(), 2), dtype=np.int64)
         it = 0
         for i in range(len(images_per_classes)):
@@ -49,7 +50,7 @@ class TripletsCSVDataset(PathBaseDataset):
         if len(negative_ids) == 0:
             raise ValueError(f'Dataset {self.csv_path} has only one label id')
         negative_id = choice(negative_ids)
-        return choice(self.dt.iloc[negative_id].values[1].split(' '))
+        return choice(self.dt[negative_id][1].split(' '))
 
     def __get_positive_id(self, positive_image_ids, anchor_image_idx):
         positive_ids = list(range(anchor_image_idx)) + list(range(anchor_image_idx + 1, len(positive_image_ids)))
@@ -60,7 +61,7 @@ class TripletsCSVDataset(PathBaseDataset):
 
     def __getitem__(self, idx):
         label_idx, image_idx = self.idxs[idx]
-        row = self.dt.iloc[label_idx].values
+        row = self.dt[label_idx]
         positive_image_ids = row[1].split(' ')
         anchor_id = positive_image_ids[image_idx]
         anchor_image = self._read_image(anchor_id)

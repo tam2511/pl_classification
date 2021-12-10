@@ -70,8 +70,8 @@ class SearchAccuracy(Metric):
         }
 
     def update(self, preds: torch.Tensor, targets: torch.Tensor):
-        self.embeddings.append(preds)
-        self.targets.append(targets)
+        self.embeddings.append(preds.cpu())
+        self.targets.append(targets.cpu())
 
     def compute(self):
         embeddings = torch.cat(self.embeddings, dim=0) if isinstance(self.embeddings, list) else self.embeddings
