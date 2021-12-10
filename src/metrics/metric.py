@@ -15,6 +15,8 @@ class MetricsList(Metric):
     ):
         super().__init__(dist_sync_on_step=dist_sync_on_step, compute_on_step=compute_on_step)
         self.metrics = ModuleList()
+        if not hasattr(self, '_device'):
+            self._device = torch.device('cpu')
 
     def __to(self, device: torch.device):
         for metric_idx in range(len(self.metrics)):
@@ -25,7 +27,6 @@ class MetricsList(Metric):
         for metric_idx in range(len(self.metrics)):
             if self._device != preds.device:
                 self.__to(preds.device)
-            self.metrics[metric_idx].to(preds.device)
             self.metrics[metric_idx].update(preds, target)
 
     def compute(self):
