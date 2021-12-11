@@ -81,11 +81,11 @@ class BestThresholdStats(Metric):
                 result['{}_recall_{}'.format(self.name, self.class_names[idx])] = recall[idx]
                 result['{}_accuracy_{}'.format(self.name, self.class_names[idx])] = accuracy[idx]
         else:
-            result['{}_precision_{}'.format(self.name, self.metric.average)] = precision
-            result['{}_recall_{}'.format(self.name, self.metric.average)] = recall
-            result['{}_accuracy_{}'.format(self.name, self.metric.average)] = accuracy
+            result['{}_precision_{}'.format(self.name, self.average)] = precision
+            result['{}_recall_{}'.format(self.name, self.average)] = recall
+            result['{}_accuracy_{}'.format(self.name, self.average)] = accuracy
         for idx in range(len(self.class_names)):
-            result['{}_f({:.2f})_{}'.format(self.name, self.metric.decisive_alpha,
+            result['{}_f({:.2f})_{}'.format(self.name, self.decisive_alpha,
                                             self.class_names[idx])] = best_decision_metric_values[idx]
             result['{}_threshold_{}'.format(self.name, self.class_names[idx])] = best_thresholds[idx]
         return result
