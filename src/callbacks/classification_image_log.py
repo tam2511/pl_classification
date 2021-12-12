@@ -158,7 +158,7 @@ class ClassificationImageLogger(Callback):
         output = outputs['output']
         idxs = self.idxs if self.mode == 'train' else self.idxs[dataloader_idx]
         x, y = batch
-        x, y, output = x.cpu(), y.cpu(), output.cpu()
+        x, y, output = x.cpu().float(), y.cpu(), output.cpu().float()
         x = torch.permute(x, (0, 2, 3, 1))
         if idxs is None:
             n_handled = self.n_handled if isinstance(self.n_handled, int) else self.n_handled[dataloader_idx]
