@@ -26,7 +26,7 @@ class Mixup(MixBaseCallback):
             batch_x_, batch_y_ = self._generate_batch_sample(batch_x, batch_y)
         else:
             batch_x_, batch_y_ = self._generate_dataset_sample(batch_size, trainer.train_dataloader)
-        alpha = torch.from_numpy(np.random.beta(self.alpha, self.alpha, batch_size)).to(batch.device)
+        alpha = torch.from_numpy(np.random.beta(self.alpha, self.alpha, batch_size)).to(self.device)
         batch_x_ = batch_x * self._unsqueeze(alpha, 3, -1) + batch_x_ * self._unsqueeze((1 - alpha), 3, -1)
         batch_y_ = batch_y * self._unsqueeze(alpha, 1, -1) + batch_y_ * self._unsqueeze((1 - alpha), 1, -1)
         for i in range(batch_size):

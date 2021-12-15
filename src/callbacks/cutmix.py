@@ -47,7 +47,7 @@ class Cutmix(MixBaseCallback):
             batch_x_, batch_y_ = self._generate_batch_sample(batch_x, batch_y)
         else:
             batch_x_, batch_y_ = self._generate_dataset_sample(batch_size, trainer.train_dataloader)
-        alpha = torch.from_numpy(np.random.beta(self.alpha, self.alpha, batch_size)).to(batch_x.device)
+        alpha = torch.from_numpy(np.random.beta(self.alpha, self.alpha, batch_size)).to(self.device)
         for i in range(batch_size):
             x, y = self.__mix(batch_x[i], batch_x_[i], batch_y[i], batch_y_[i], alpha[i])
             batch_x[i] = x
