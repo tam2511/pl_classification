@@ -17,6 +17,8 @@ class Mixup(MixBaseCallback):
 
     def on_train_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
         batch_x, batch_y = batch
+        if self.device != batch_x.device:
+            self.device = batch_x.device
         assert isinstance(batch_x, torch.Tensor)
         assert isinstance(batch_y, torch.Tensor)
         batch_size = batch_x.size(0)
