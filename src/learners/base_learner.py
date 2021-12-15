@@ -56,6 +56,19 @@ class BaseLearner(LightningModule):
     def training_step(self, batch, batch_idx):
         loss, output, target, return_output = self.common_step(batch, batch_idx)
         self.log('train/loss', loss, on_step=True, on_epoch=False)
+        optimizer = self.optimizers()
+        lrs = [group['lr'] for group in optimizer.param_groups]
+        grouped_lrs = {}
+        for idx, lr in enumerate(lrs):
+            if lr not in grouped_lrs:
+                grouped_lrs[lr] = []
+            grouped_lrs[lr].append(idx)
+        if len(grouped_lrs) == 1:
+            self.log('lr', lrs[0], on_step=True, on_epoch=False, prog_bar=True)
+        else:
+            for lr in grouped_lrs:
+                ids = ','.join(map(str, grouped_lrs[lr]))
+                self.log(f'lr_groups[{ids}]', lr, on_step=True, on_epoch=False, prog_bar=True)
         self.train_metrics.update(output, target)
         ret = {'loss': loss}
         if self.return_train_output:
