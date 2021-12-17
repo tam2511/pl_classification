@@ -47,6 +47,8 @@ class BestThresholdStats(Metric):
         self.add_state("fn", default=torch.zeros(num_classes, self.thresholds.size(0)), dist_reduce_fx="sum")
 
     def update(self, preds: torch.Tensor, target: torch.Tensor):
+        if self.class_names is None:
+            self.class_names = torch.arange(target.shape[1])
         for threshold_idx, threshold in enumerate(self.thresholds):
             stat_scores_ = stat_scores(preds, target, reduce='macro', num_classes=self.num_classes, threshold=threshold)
             self.tp[:, threshold_idx] += stat_scores_[:, 0]
