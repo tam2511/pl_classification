@@ -29,6 +29,6 @@ class ClassificatorLearner(BaseLearner):
         y_ = self.forward(x)
         loss = self.loss_f(y_, y.float() if self.multilabel else y.argmax(dim=1))
         output = y_.sigmoid() if self.multilabel else y_.argmax(dim=1)
-        target = y
+        target = y if self.multilabel else y.argmax(dim=1)
         return_output = y_.sigmoid() if self.multilabel else y_.softmax(dim=1)
         return loss, output, target, return_output
