@@ -26,9 +26,10 @@ class SequentialFinetune(BaseFinetuning):
         self.make_trainable(modules)
         trainable_params = self.filter_params(modules, train_bn=True, requires_grad=True)
         trainable_params = self.filter_on_optimizer(optimizer, trainable_params)
-        base_lr = optimizer.param_groups[-1]['lr']
-        new_lr = base_lr * subseq['lr_gamma'] if 'lr_gamma' in subseq else base_lr
-        optimizer.add_param_group({
-            'params': trainable_params,
-            'lr': new_lr
-        })
+        last_group = optimizer.param_groups[-1]
+        params = {param: last_group[param] for param in last_group if param != 'params'}
+        for param in params:
+            if (param.find('lr') > -1) and 'lr_gamma' in subseq:
+                params[param] *= subseq['lr_gamma']
+        params['params'] = trainable_params
+        optimizer.add_param_group(params)
