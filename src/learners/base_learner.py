@@ -9,9 +9,9 @@ from optimizers import Optimizer
 class BaseLearner(LightningModule):
     def __init__(
             self,
-            model: torch.nn.Module,
-            loss: torch.nn.Module,
-            optimizer: Optimizer,
+            model: torch.nn.Module = None,
+            loss: torch.nn.Module = None,
+            optimizer: Optimizer = None,
             lr_scheduler: Scheduler = None,
             train_metrics: list = None,
             val_metrics: list = None,
